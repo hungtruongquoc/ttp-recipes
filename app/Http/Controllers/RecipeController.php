@@ -14,23 +14,9 @@ class RecipeController extends Controller
 {
     public function getRecipes(Request $request): JsonResponse
     {
-        $recipes = Recipe::get();
+        $recipes = Recipe::with('ingredients')->get();
 
-        $formattedRecipes = $recipes->map(function ($recipe) {
-            return [
-                'id' => $recipe->id,
-                'name' => $recipe->name,
-                'description' => $recipe->description,
-                'ingredients' => $recipe->ingredients->map(function ($ingredient) {
-                    return [
-                        'id' => $ingredient->id,
-                        'name' => $ingredient->name,
-                    ];
-                }),
-            ];
-        });
-
-        return response()->json($formattedRecipes);
+        return response()->json($recipes);
     }
 
     public function newRecipe(StoreRecipeRequest $request): JsonResponse
