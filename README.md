@@ -100,3 +100,13 @@ git remote remove origin
 git remote add origin <your-repository-url>
 git push -u origin main
 ```
+
+# References
+Install sail without PHP on local machine
+```bash
+docker run --rm \
+    -v "$(pwd)":/opt \
+    -w /opt \
+    laravelsail/php82-composer:latest \
+    bash -c "composer require laravel/sail --dev && php artisan sail:install"
+```
