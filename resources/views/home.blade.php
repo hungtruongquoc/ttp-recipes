@@ -20,13 +20,27 @@
                     <fieldset>
                         <label>
                             <p>Name</p>
-                            <input type="text" x-model="newRecipe.name">
+                            <input type="text" x-model="newRecipe.name"
+                                   :class="{'field-error': newRecipe.validationErrors.name}">
+                            <span class="validation-error"
+                                  x-show="newRecipe.validationErrors.name"
+                                  x-text="newRecipe.validationErrors.name"></span>
                         </label>
                         <label>
                             <p>Description</p>
-                            <input type="text" x-model="newRecipe.description">
+                            <input type="text"
+                                   x-model="newRecipe.description"
+                                   :class="{'field-error': newRecipe.validationErrors.description}">
+                            <span class="validation-error"
+                                  x-show="newRecipe.validationErrors.description"
+                                  x-text="newRecipe.validationErrors.description"></span>
                         </label>
-                        <label><p>Ingredients</p></label>
+                        <label>
+                            <p>Ingredients</p>
+                            <span class="validation-error"
+                                  x-show="newRecipe.validationErrors.ingredients"
+                                  x-text="newRecipe.validationErrors.ingredients"></span>
+                        </label>
                         <div class="box">
                             <template x-for="(ingredient, index) in newRecipe.ingredients" :key="index">
                                 <p>

@@ -31,6 +31,43 @@ async function apiRequest(path, method = 'GET', body = null) {
     }
 }
 
+function validateRecipe(recipe) {
+    const errors = {};
+
+    // Validate name
+    if (!recipe.name || recipe.name.trim() === '') {
+        errors.name = 'Recipe name is required.';
+    } else if (recipe.name.length > 255) {
+        errors.name = 'Recipe name cannot exceed 255 characters.';
+    }
+
+    // Validate description
+    if (!recipe.description || recipe.description.trim() === '') {
+        errors.description = 'Recipe description is required.';
+    }
+
+    // Validate ingredients
+    if (!recipe.ingredients || !Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
+        errors.ingredients = 'At least one ingredient is required.';
+    } else {
+        // Check if any ingredients are empty
+        const emptyIngredients = recipe.ingredients.some(ingredient => {
+            // Handle both new recipe (string) and editing (object with name property)
+            const ingredientName = typeof ingredient === 'string' ? ingredient : ingredient.name;
+            return !ingredientName || ingredientName.trim() === '';
+        });
+
+        if (emptyIngredients) {
+            errors.ingredients = 'All ingredients must have a name.';
+        }
+    }
+
+    return {
+        isValid: Object.keys(errors).length === 0,
+        errors
+    };
+}
+
 function useRecipeSubmit() {
     async function submitRecipe(apiPath, method, data) {
         try {
@@ -75,6 +112,7 @@ function recipesApp() {
         recipes: [],
         loading: true,
         error: null,
+        validationErrors: {},
         init() {
             this.fetchRecipes();
         },
@@ -101,10 +139,28 @@ function recipesApp() {
             description: '',
             ingredients: [],
             show: false,
+            validationErrors: {},
+            validate() {
+                const result = validateRecipe({
+                    name: this.name,
+                    description: this.description,
+                    ingredients: this.ingredients
+                });
+
+                this.validationErrors = result.errors;
+                return result.isValid;
+            },
             addIngredient () {
                 this.newRecipe.ingredients.push('');
             },
             async submit () {
+                this.newRecipe.validationErrors = {};
+
+                // Validate before submission
+                if (!this.newRecipe.validate()) {
+                    return; // Stop if validation fails
+                }
+
                 const requestBody = {
                     name: this.newRecipe.name,
                     description: this.newRecipe.description,
