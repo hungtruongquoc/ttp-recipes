@@ -82,13 +82,28 @@
                             <fieldset x-show="recipe.editing">
                                 <label>
                                     <p>Name</p>
-                                    <input type="text" x-model="recipe.editingData.name">
+                                    <input type="text"
+                                           x-model="recipe.editingData.name"
+                                           :class="{'field-error': recipe.validationErrors && recipe.validationErrors.name}">
+                                    <span class="validation-error"
+                                          x-show="recipe.validationErrors && recipe.validationErrors.name"
+                                          x-text="recipe.validationErrors && recipe.validationErrors.name"></span>
                                 </label>
                                 <label>
                                     <p>Description</p>
-                                    <input type="text" x-model="recipe.editingData.description">
+                                    <input type="text"
+                                           x-model="recipe.editingData.description"
+                                           :class="{'field-error': recipe.validationErrors && recipe.validationErrors.description}">
+                                    <span class="validation-error"
+                                          x-show="recipe.validationErrors && recipe.validationErrors.description"
+                                          x-text="recipe.validationErrors && recipe.validationErrors.description"></span>
                                 </label>
-                                <label><p>Ingredients</p></label>
+                                <label>
+                                    <p>Ingredients</p>
+                                    <span class="validation-error"
+                                          x-show="recipe.validationErrors && recipe.validationErrors.ingredients"
+                                          x-text="recipe.validationErrors && recipe.validationErrors.ingredients"></span>
+                                </label>
                                 <div class="box">
                                     <template x-for="(ingredient, index) in recipe.editingData.ingredients" :key="index">
                                         <p>
@@ -100,7 +115,7 @@
                                     </p>
                                 </div>
                                 <p class="flex">
-                                    <button x-on:click="recipe.editing = false; recipe.error = null">Cancel</button>
+                                    <button x-on:click="recipe.editing = false; recipe.error = null; recipe.validationErrors = {}">Cancel</button>
                                     <button class="primary" x-on:click="saveExistingRecipe(recipe)">Save</button>
                                 </p>
                                 <div x-show="!!recipe.error" class="error-text" x-cloak>

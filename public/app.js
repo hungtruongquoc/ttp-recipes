@@ -31,6 +31,10 @@ async function apiRequest(path, method = 'GET', body = null) {
     }
 }
 
+function resetValidationErrors(target) {
+    target.validationErrors = {};
+}
+
 function validateRecipe(recipe) {
     const errors = {};
 
@@ -72,7 +76,7 @@ function useRecipeSubmit() {
     async function submitRecipe(apiPath, method, data) {
         try {
             const result = await apiRequest(apiPath, method, data);
-            return { success: true, data: result, error: null };
+            return {success: true, data: result, error: null};
         } catch (error) {
             // Handle validation errors (422)
             if (error.response && error.response.status === 422) {
@@ -91,7 +95,7 @@ function useRecipeSubmit() {
         }
     }
 
-    return { submitRecipe };
+    return {submitRecipe};
 }
 
 // Helper function to process validation errors
@@ -107,7 +111,7 @@ function processValidationErrors(error) {
 }
 
 function recipesApp() {
-    const { submitRecipe } = useRecipeSubmit();
+    const {submitRecipe} = useRecipeSubmit();
     return {
         recipes: [],
         loading: true,
@@ -116,7 +120,7 @@ function recipesApp() {
         init() {
             this.fetchRecipes();
         },
-        createRecipeComponentFromData (recipeData) {
+        createRecipeComponentFromData(recipeData) {
             return {
                 data: recipeData,
                 editingData: {},
@@ -141,6 +145,7 @@ function recipesApp() {
             show: false,
             validationErrors: {},
             validate() {
+                resetValidationErrors(this)
                 const result = validateRecipe({
                     name: this.name,
                     description: this.description,
@@ -150,10 +155,10 @@ function recipesApp() {
                 this.validationErrors = result.errors;
                 return result.isValid;
             },
-            addIngredient () {
+            addIngredient() {
                 this.newRecipe.ingredients.push('');
             },
-            async submit () {
+            async submit() {
                 this.newRecipe.validationErrors = {};
 
                 // Validate before submission
@@ -187,14 +192,25 @@ function recipesApp() {
                 }
             },
         },
-        startEditingExistingRecipe (recipe) {
+        startEditingExistingRecipe(recipe) {
             recipe.editingData = JSON.parse(JSON.stringify(recipe.data));
             recipe.editing = true;
         },
-        addIngredientToExistingRecipe (recipe) {
+        addIngredientToExistingRecipe(recipe) {
             recipe.editingData.ingredients.push({id: null, name: ''});
         },
-        async saveExistingRecipe (recipe) {
+        validateExistingRecipe(recipe) {
+            resetValidationErrors(recipe);
+            const result = validateRecipe({
+                name: recipe.editingData.name,
+                description: recipe.editingData.description,
+                ingredients: recipe.editingData.ingredients
+            });
+
+            recipe.validationErrors = result.errors;
+            return result.isValid;
+        },
+        async saveExistingRecipe(recipe) {
             // Filter out ingredients with empty names before creating the copy
             if (recipe.editingData.ingredients && Array.isArray(recipe.editingData.ingredients)) {
                 recipe.editingData.ingredients = recipe.editingData.ingredients.filter(
@@ -202,15 +218,14 @@ function recipesApp() {
                 );
             }
 
-            // Check if we have at least one ingredient after filtering
-            if (!recipe.editingData.ingredients || recipe.editingData.ingredients.length === 0) {
-                recipe.error = 'At least one ingredient with a name is required.';
-                return;
+            // Validate before submission
+            if (!this.validateExistingRecipe(recipe)) {
+                return; // Stop if validation fails
             }
 
             const editedRecipe = JSON.parse(JSON.stringify(recipe.editingData));
 
-            const { success, data, error } = await submitRecipe(
+            const {success, data, error} = await submitRecipe(
                 `/api/recipes/${recipe.data.id}`,
                 'PUT',
                 editedRecipe
