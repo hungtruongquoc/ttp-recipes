@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreRecipeRequest;
 use App\Models\Ingredient;
 use App\Models\Recipe;
 use Illuminate\Http\JsonResponse;
@@ -32,40 +33,31 @@ class RecipeController extends Controller
         return response()->json($formattedRecipes);
     }
 
-    public function newRecipe(Request $request): JsonResponse
+    public function newRecipe(StoreRecipeRequest $request): JsonResponse
     {
-        $name = $request->input('name');
-        $description = $request->input('description');
-        $ingredientNames = $request->input('ingredients');
-
         // Use a transaction to ensure atomicity
         try {
             DB::beginTransaction();
 
-            $recipe = new Recipe();
-            $recipe->name = $name;
-            $recipe->description = $description;
-            $recipe->save();
+            // Create the recipe with validated data
+            $recipe = Recipe::create([
+                'name' => $request->name,
+                'description' => $request->description,
+            ]);
 
-            foreach ($ingredientNames as $ingredientName) {
-                $ingredient = new Ingredient();
-                $ingredient->name = $ingredientName;
-                $recipe->ingredients()->save($ingredient);
+            // Add ingredients
+            foreach ($request->ingredients as $ingredientName) {
+                $recipe->ingredients()->create([
+                    'name' => $ingredientName,
+                ]);
             }
 
             DB::commit();
 
-            return response()->json([
-                'id' => $recipe->id,
-                'name' => $recipe->name,
-                'description' => $recipe->description,
-                'ingredients' => $recipe->ingredients->map(function ($ingredient) {
-                    return [
-                        'id' => $ingredient->id,
-                        'name' => $ingredient->name,
-                    ];
-                }),
-            ]);
+            // Load the ingredients relationship before returning
+            $recipe->load('ingredients');
+
+            return response()->json($recipe, 201);
         } catch (\Exception $e) {
             DB::rollBack();
 
