@@ -20,7 +20,10 @@ class RecipeController extends Controller
 {
     public function getRecipes(Request $request): JsonResponse
     {
-        $recipes = Recipe::with('ingredients')->latest()->get();
+        $recipes = Recipe::select('id', 'name', 'description', 'created_at')
+            ->with('ingredients:id,recipe_id,name')
+            ->latest()
+            ->get();
 
         return response()->json(RecipeResource::collection($recipes));
     }
