@@ -31,6 +31,18 @@ async function apiRequest(path, method = 'GET', body = null) {
     }
 }
 
+// Helper function to process validation errors
+function processValidationErrors(error) {
+    if (error.data && error.data.errors) {
+        const errorMessages = [];
+        for (const field in error.data.errors) {
+            errorMessages.push(error.data.errors[field][0]);
+        }
+        return errorMessages.join('\n');
+    }
+    return 'An error occurred while processing your request.';
+}
+
 function recipesApp() {
     return {
         recipes: [],
@@ -85,12 +97,7 @@ function recipesApp() {
                 } catch (error) {
                     // Try to parse response to get validation errors
                     if (error.response && error.response.status === 422) {
-                        const errorMessages = []
-                        // Get validation errors from response
-                        for (const field in error.data.errors) {
-                            errorMessages.push(error.data.errors[field][0]);
-                        }
-                        this.error = errorMessages.join('\n');
+                        this.error = processValidationErrors(error);
                     } else {
                         // Retains generic error message for case like 500
                         this.error = 'Error adding recipe!';
