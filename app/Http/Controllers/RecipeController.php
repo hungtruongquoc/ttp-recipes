@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRecipeRequest;
 use App\Http\Requests\UpdateRecipeRequest;
+use App\Http\Resources\RecipeResource;
 use App\Models\Ingredient;
 use App\Models\Recipe;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +18,7 @@ class RecipeController extends Controller
     {
         $recipes = Recipe::with('ingredients')->latest()->get();
 
-        return response()->json($recipes);
+        return response()->json(RecipeResource::collection($recipes));
     }
 
     public function newRecipe(StoreRecipeRequest $request): JsonResponse
@@ -41,7 +42,7 @@ class RecipeController extends Controller
             // Refreshes the ingredient list
             $recipe->load('ingredients');
 
-            return response()->json($recipe, 201);
+            return response()->json(new RecipeResource($recipe), 201);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create recipe: ' . $e->getMessage());
@@ -97,7 +98,7 @@ class RecipeController extends Controller
             // Refreshes the ingredient list
             $recipe->load('ingredients');
 
-            return response()->json($recipe);
+            return response()->json(new RecipeResource($recipe));
         } catch (\Exception $e) {
             DB::rollBack();
 
