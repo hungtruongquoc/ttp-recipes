@@ -120,6 +120,14 @@ function recipesApp() {
         init() {
             this.fetchRecipes();
         },
+        toggleNewRecipeForm() {
+            this.newRecipe.show = !this.newRecipe.show;
+        },
+        cancelEditing(recipe) {
+            recipe.editing = false;
+            recipe.error = null;
+            resetValidationErrors(recipe)
+        },
         createRecipeComponentFromData(recipeData) {
             return {
                 data: recipeData,

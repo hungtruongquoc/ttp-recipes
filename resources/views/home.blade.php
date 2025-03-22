@@ -15,7 +15,7 @@
 
         <div class="container" x-data="recipesApp()">
             <div class="margin-y">
-                <button class="primary" x-on:click="newRecipe.show = !newRecipe.show">New Recipe</button>
+                <button class="primary" x-on:click="toggleNewRecipeForm()">New Recipe</button>
                 <div class="card" x-show="newRecipe.show">
                     <fieldset>
                         <label>
@@ -115,7 +115,7 @@
                                     </p>
                                 </div>
                                 <p class="flex">
-                                    <button x-on:click="recipe.editing = false; recipe.error = null; recipe.validationErrors = {}">Cancel</button>
+                                    <button x-on:click="cancelEditing(recipe)">Cancel</button>
                                     <button class="primary" x-on:click="saveExistingRecipe(recipe)">Save</button>
                                 </p>
                                 <div x-show="!!recipe.error" class="error-text" x-cloak>
