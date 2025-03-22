@@ -101,6 +101,18 @@ git remote add origin <your-repository-url>
 git push -u origin main
 ```
 
+# Additional Considerations
+
+## Usage of Event for Cache Invalidation
+
+By implementing a dedicated event-based system for cache invalidation, we've established a clear separation between data manipulation logic and cache management concerns. The controller maintains ownership of its cache keys as constants, making them a single source of truth, while delegating the actual invalidation process to specialized listeners. This architecture not only improves code organization but also enhances testability by allowing each component to be verified in isolation. When controllers modify data, they simply dispatch events with appropriate cache keys, and the listener handles the technical details of cache removal. This approach scales effectively as the application grows, keeping responsibilities clearly defined and minimizing the risk of inconsistent cache states or forgotten invalidations.
+
+## Sanitization of Input and Output
+
+We leverage Laravel's JsonResource and FormRequest classes to implement a clear separation of concerns in our API architecture. JsonResource classes serve as dedicated transformation layers, ensuring consistent data sanitization and formatting specifically tailored for HTTP JSON responses. This approach isolates presentation logic from the core business logic in controllers and models. Similarly, FormRequest classes provide specialized input validation, moving request validation rules out of controllers into dedicated classes. This structured approach not only makes controllers more focused and lightweight but also increases code reusability across the application. By compartmentalizing these responsibilities, we improve maintainability and create natural boundaries for unit testing each component independently.
+
+```bash
+
 # References
 Install sail without PHP on local machine
 ```bash
