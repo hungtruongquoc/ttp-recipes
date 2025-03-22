@@ -25,7 +25,7 @@ class RecipeController extends Controller
             ->latest()
             ->get();
 
-        return response()->json(RecipeResource::collection($recipes));
+        return $this->respondWithCollection(RecipeResource::collection($recipes));
     }
 
     /**
@@ -52,7 +52,7 @@ class RecipeController extends Controller
             // Refreshes the ingredient list
             $recipe->load('ingredients');
 
-            return response()->json(new RecipeResource($recipe), 201);
+            return $this->respondWithResource(new RecipeResource($recipe), 201);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create recipe: ' . $e->getMessage());
@@ -111,7 +111,7 @@ class RecipeController extends Controller
             // Refreshes the ingredient list
             $recipe->load('ingredients');
 
-            return response()->json(new RecipeResource($recipe));
+            return $this->respondWithResource(new RecipeResource($recipe));
         } catch (RecipeNotFoundException | IngredientNotFoundException $e) {
             DB::rollBack();
             throw $e;
