@@ -122,6 +122,12 @@ function recipesApp() {
         },
         toggleNewRecipeForm() {
             this.newRecipe.show = !this.newRecipe.show;
+            if (!this.newRecipe.show) {
+                this.newRecipe.name = '';
+                this.newRecipe.description = '';
+                this.newRecipe.ingredients = [];
+                resetValidationErrors(this.newRecipe);
+            }
         },
         cancelEditing(recipe) {
             recipe.editing = false;
@@ -192,10 +198,7 @@ function recipesApp() {
                         this.error = null;
 
                         // Clear form after successful submission
-                        this.newRecipe.name = '';
-                        this.newRecipe.description = '';
-                        this.newRecipe.ingredients = [];
-                        this.newRecipe.show = false;
+                       this.toggleNewRecipeForm();
                     } else {
                         this.error = error;
                     }
