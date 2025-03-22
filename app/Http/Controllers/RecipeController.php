@@ -21,6 +21,13 @@ use Illuminate\Support\Facades\Cache;
 class RecipeController extends Controller
 {
     /**
+     * Cache key for all recipes.
+     *
+     * @var string
+     */
+    private const CACHE_KEY_ALL_RECIPES = 'recipes.all';
+
+    /**
      * Get a list of all recipes with their ingredients.
      *
      * @param Request $request The incoming HTTP request
@@ -28,11 +35,8 @@ class RecipeController extends Controller
      */
     public function getRecipes(Request $request): JsonResponse
     {
-        // Generate a cache key
-        $cacheKey = 'recipes.all';
-
         // Cache the results for 60 minutes (or any duration that makes sense for your app)
-        $recipes = Cache::remember($cacheKey, now()->addMinutes(60), function () {
+        $recipes = Cache::remember(self::CACHE_KEY_ALL_RECIPES, now()->addMinutes(60), function () {
             return Recipe::select('id', 'name', 'description', 'created_at')
                 ->with('ingredients:id,recipe_id,name')
                 ->latest()
@@ -67,7 +71,7 @@ class RecipeController extends Controller
 
             DB::commit();
 
-            event(new CacheDataChanged());
+            event(new CacheDataChanged(self::CACHE_KEY_ALL_RECIPES));
             // Refreshes the ingredient list
             $recipe->load('ingredients');
 
@@ -132,7 +136,7 @@ class RecipeController extends Controller
 
             DB::commit();
 
-            event(new CacheDataChanged());
+            event(new CacheDataChanged(self::CACHE_KEY_ALL_RECIPES));
             // Refreshes the ingredient list
             $recipe->load('ingredients');
 

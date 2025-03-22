@@ -14,7 +14,7 @@ class CacheDataChanged
      *
      * @return void
      */
-    public function __construct( public string $cacheKey = "recipes.all")
+    public function __construct( public string $cacheKey)
     {
     }
 }
