@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Alkatra:wght@400..700&display=swap');
+* {
+    box-sizing: border-box;
+}
+body {
+    font-family: Arial, sans-serif;
+    background-color: #FFF7D8;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+.site-title {
+    font-family: 'Alkatra';
+    text-align: center;
+    color: #1C7F84;
+}
+.recipe-title {
+    font-size: 24px;
+    font-family: 'Alkatra';
+}
+.loading-text {
+    text-align: center;
+    padding: 40px 20px;
+}
+.error-text {
+    text-align: center;
+    padding: 20px;
+    background-color: #cf5353;
+    font-weight: bold;
+    color: white;
+}
+.margin-y {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.card {
+    background-color: #fff;
+    padding: 5px 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border: 3px solid #6e8c8e;
+}
+.box {
+    padding: 0 20px;
+    border: 1px solid #555;
+}
+button {
+    background-color: #dddddd;
+    border: none;
+    cursor: pointer;
+    padding: 10px 20px;
+    font-weight: bold;
+}
+button.primary {
+    background-color: #1C7F84;
+    color: white;
+}
+input[type="text"] {
+    border: 1px solid #555;
+    padding: 6px 8px;
+    font-size: 18px;
+    width: 400px;
+    max-width: 100%;
+}
+fieldset {
+    border: none;
+}
+fieldset label p {
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 2px;
+}
+.flex {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.flex-grow {
+    flex-grow: 1;
+}
+
+[x-cloak] { display: none !important; }
