@@ -47,7 +47,7 @@
                 <div x-show="loading" class="loading-text">Loading recipes...</div>
 
                 <div x-show="!!error" class="error-text" x-cloak>
-                    <p x-text="error"></p>
+                    <pre x-text="error" style="white-space: pre-wrap; font-family: inherit;"></pre>
                 </div>
 
                 <div x-show="!loading" x-cloak>

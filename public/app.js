@@ -14,11 +14,17 @@ async function apiRequest(path, method = 'GET', body = null) {
     try {
         const response = await fetch(path, options);
 
+        // Parse JSON response
+        const data = await response.json();
+
         if (!response.ok) {
-            throw new Error(`HTTP error, status ${response.status}`);
+            const error = new Error(`HTTP error, status ${response.status}`);
+            error.response = response;
+            error.data = data;
+            throw error;
         }
 
-        return await response.json();
+        return data;
     } catch (error) {
         console.error(`apiRequest(): ${error}`);
         throw error;
@@ -70,8 +76,25 @@ function recipesApp() {
                     const newRecipe = await apiRequest('api/recipes', 'POST', requestBody);
                     this.recipes.unshift(this.createRecipeComponentFromData(newRecipe));
                     this.error = null;
+
+                    // Clear form after successful submission
+                    this.name = '';
+                    this.description = '';
+                    this.ingredients = [];
+                    this.show = false;
                 } catch (error) {
-                    this.error = 'Error adding recipe!';
+                    // Try to parse response to get validation errors
+                    if (error.response && error.response.status === 422) {
+                        const errorMessages = []
+                        // Get validation errors from response
+                        for (const field in error.data.errors) {
+                            errorMessages.push(error.data.errors[field][0]);
+                        }
+                        this.error = errorMessages.join('\n');
+                    } else {
+                        // Retains generic error message for case like 500
+                        this.error = 'Error adding recipe!';
+                    }
                 }
             },
         },
