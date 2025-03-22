@@ -60,8 +60,14 @@ function recipesApp() {
                 this.newRecipe.ingredients.push('');
             },
             async submit () {
+                const requestBody = {
+                    name: this.newRecipe.name,
+                    description: this.newRecipe.description,
+                    ingredients: this.newRecipe.ingredients
+                }
+
                 try {
-                    const newRecipe = await apiRequest('api/recipe/new?name=' + this.newRecipe.name + '&description=' + this.newRecipe.description + '&ingredients=' + JSON.stringify(this.newRecipe.ingredients));
+                    const newRecipe = await apiRequest('api/recipes', 'POST', requestBody);
                     this.recipes.unshift(this.createRecipeComponentFromData(newRecipe));
                     this.error = null;
                 } catch (error) {
