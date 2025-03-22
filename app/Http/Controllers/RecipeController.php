@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Exceptions\IngredientNotFoundException;
+use App\Http\Exceptions\RecipeCreationException;
+use App\Http\Exceptions\RecipeNotFoundException;
+use App\Http\Exceptions\RecipeUpdateException;
 use App\Http\Requests\StoreRecipeRequest;
 use App\Http\Requests\UpdateRecipeRequest;
 use App\Http\Resources\RecipeResource;
@@ -21,6 +25,9 @@ class RecipeController extends Controller
         return response()->json(RecipeResource::collection($recipes));
     }
 
+    /**
+     * @throws RecipeCreationException
+     */
     public function newRecipe(StoreRecipeRequest $request): JsonResponse
     {
         try {
@@ -47,12 +54,15 @@ class RecipeController extends Controller
             DB::rollBack();
             Log::error('Failed to create recipe: ' . $e->getMessage());
 
-            return response()->json([
-                'error' => 'Failed to create recipe'
-            ], 500);
+            throw new RecipeCreationException('Failed to create recipe: ' . $e->getMessage(), $e);
         }
     }
 
+    /**
+     * @throws IngredientNotFoundException
+     * @throws RecipeNotFoundException
+     * @throws RecipeUpdateException
+     */
     public function updateRecipe(UpdateRecipeRequest $request, int $id): JsonResponse
     {
         try {
@@ -99,15 +109,16 @@ class RecipeController extends Controller
             $recipe->load('ingredients');
 
             return response()->json(new RecipeResource($recipe));
+        } catch (RecipeNotFoundException | IngredientNotFoundException $e) {
+            DB::rollBack();
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error('Failed to update recipe: ' . $e->getMessage());
             Log::error('Error details: ' . $e->getTraceAsString());
 
-            return response()->json([
-                'error' => 'Failed to update recipe'
-            ], 500);
+            throw new RecipeUpdateException('Failed to update recipe: ' . $e->getMessage(), $e);
         }
     }
 }
