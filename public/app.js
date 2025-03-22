@@ -152,12 +152,14 @@ function recipesApp() {
             ingredients: [],
             show: false,
             validationErrors: {},
+            submitting: false,
             validate() {
-                resetValidationErrors(this)
+                resetValidationErrors(this);
+                const {name, description, ingredients} = this;
                 const result = validateRecipe({
-                    name: this.name,
-                    description: this.description,
-                    ingredients: this.ingredients
+                    name,
+                    description,
+                    ingredients
                 });
 
                 this.validationErrors = result.errors;
@@ -167,36 +169,40 @@ function recipesApp() {
                 this.newRecipe.ingredients.push('');
             },
             async submit() {
-                this.newRecipe.validationErrors = {};
-
                 // Validate before submission
                 if (!this.newRecipe.validate()) {
                     return; // Stop if validation fails
                 }
 
-                const requestBody = {
-                    name: this.newRecipe.name,
-                    description: this.newRecipe.description,
-                    ingredients: this.newRecipe.ingredients
+                const {name, description, ingredients} = this.newRecipe;
+
+                const requestBody = {name, description, ingredients};
+                this.newRecipe.submitting = true;
+
+                try {
+                    const {success, data, error} = await submitRecipe(
+                        'api/recipes',
+                        'POST',
+                        requestBody
+                    );
+
+                    if (success) {
+                        this.recipes.unshift(this.createRecipeComponentFromData(data));
+                        this.error = null;
+
+                        // Clear form after successful submission
+                        this.newRecipe.name = '';
+                        this.newRecipe.description = '';
+                        this.newRecipe.ingredients = [];
+                        this.newRecipe.show = false;
+                    } else {
+                        this.error = error;
+                    }
+                } catch (e) {
+                    this.error = 'Unexpected error during submission';
                 }
-
-                const {success, data, error} = await submitRecipe(
-                    'api/recipes',
-                    'POST',
-                    requestBody
-                );
-
-                if (success) {
-                    this.recipes.unshift(this.createRecipeComponentFromData(data));
-                    this.error = null;
-
-                    // Clear form after successful submission
-                    this.name = '';
-                    this.description = '';
-                    this.ingredients = [];
-                    this.show = false;
-                } else {
-                    this.error = error;
+                finally {
+                    this.newRecipe.submitting = false;
                 }
             },
         },
@@ -209,19 +215,21 @@ function recipesApp() {
         },
         validateExistingRecipe(recipe) {
             resetValidationErrors(recipe);
+            const {name, description, ingredients} = recipe.editingData;
             const result = validateRecipe({
-                name: recipe.editingData.name,
-                description: recipe.editingData.description,
-                ingredients: recipe.editingData.ingredients
+                name,
+                description,
+                ingredients
             });
 
             recipe.validationErrors = result.errors;
             return result.isValid;
         },
         async saveExistingRecipe(recipe) {
+            const {ingredients} = recipe.editingData;
             // Filter out ingredients with empty names before creating the copy
-            if (recipe.editingData.ingredients && Array.isArray(recipe.editingData.ingredients)) {
-                recipe.editingData.ingredients = recipe.editingData.ingredients.filter(
+            if (ingredients && Array.isArray(ingredients)) {
+                recipe.editingData.ingredients = ingredients.filter(
                     ingredient => ingredient.name && ingredient.name.trim() !== ''
                 );
             }

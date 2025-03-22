@@ -52,7 +52,12 @@
                             </p>
                         </div>
                         <p>
-                            <button class="primary" x-on:click="newRecipe.submit">Save</button>
+                            <button class="primary"
+                                    x-on:click="newRecipe.submit"
+                                    x-bind:disabled="newRecipe.submitting">
+                                <span x-show="!newRecipe.submitting">Save</span>
+                                <span x-show="newRecipe.submitting">Saving...</span>
+                            </button>
                         </p>
                     </fieldset>
                 </div>
