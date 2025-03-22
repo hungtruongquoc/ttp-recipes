@@ -149,6 +149,7 @@ function recipesApp() {
                 this.error = null;
             } catch (error) {
                 this.error = 'Error fetching recipes!';
+                console.error("Error fetching recipes:", error);
             } finally {
                 this.loading = false;
             }
@@ -198,14 +199,13 @@ function recipesApp() {
                         this.error = null;
 
                         // Clear form after successful submission
-                       this.toggleNewRecipeForm();
+                        this.toggleNewRecipeForm();
                     } else {
                         this.error = error;
                     }
                 } catch (e) {
                     this.error = 'Unexpected error during submission';
-                }
-                finally {
+                } finally {
                     this.newRecipe.submitting = false;
                 }
             },
@@ -215,6 +215,9 @@ function recipesApp() {
             recipe.editing = true;
         },
         addIngredientToExistingRecipe(recipe) {
+            if (!Array.isArray(recipe.editingData.ingredients)) {
+                recipe.editingData.ingredients = [];
+            }
             recipe.editingData.ingredients.push({id: null, name: ''});
         },
         validateExistingRecipe(recipe) {
