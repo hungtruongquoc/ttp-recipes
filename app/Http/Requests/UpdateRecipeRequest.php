@@ -3,10 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
 
-class UpdateRecipeRequest extends FormRequest
+class UpdateRecipeRequest extends SanitizingFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
