@@ -139,6 +139,19 @@ function recipesApp() {
             recipe.editingData.ingredients.push({id: null, name: ''});
         },
         async saveExistingRecipe (recipe) {
+            // Filter out ingredients with empty names before creating the copy
+            if (recipe.editingData.ingredients && Array.isArray(recipe.editingData.ingredients)) {
+                recipe.editingData.ingredients = recipe.editingData.ingredients.filter(
+                    ingredient => ingredient.name && ingredient.name.trim() !== ''
+                );
+            }
+
+            // Check if we have at least one ingredient after filtering
+            if (!recipe.editingData.ingredients || recipe.editingData.ingredients.length === 0) {
+                recipe.error = 'At least one ingredient with a name is required.';
+                return;
+            }
+
             const editedRecipe = JSON.parse(JSON.stringify(recipe.editingData));
 
             const { success, data, error } = await submitRecipe(

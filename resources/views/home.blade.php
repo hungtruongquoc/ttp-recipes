@@ -86,11 +86,11 @@
                                     </p>
                                 </div>
                                 <p class="flex">
-                                    <button x-on:click="recipe.editing = false">Cancel</button>
+                                    <button x-on:click="recipe.editing = false; recipe.error = null">Cancel</button>
                                     <button class="primary" x-on:click="saveExistingRecipe(recipe)">Save</button>
                                 </p>
-                                <div x-show="!!error" class="error-text" x-cloak>
-                                    <pre x-text="error" style="white-space: pre-wrap; font-family: inherit;"></pre>
+                                <div x-show="!!recipe.error" class="error-text" x-cloak>
+                                    <pre x-text="recipe.error" style="white-space: pre-wrap; font-family: inherit;"></pre>
                                 </div>
                             </fieldset>
                         </div>
