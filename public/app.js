@@ -31,6 +31,32 @@ async function apiRequest(path, method = 'GET', body = null) {
     }
 }
 
+function useRecipeSubmit() {
+    async function submitRecipe(apiPath, method, data) {
+        try {
+            const result = await apiRequest(apiPath, method, data);
+            return { success: true, data: result, error: null };
+        } catch (error) {
+            // Handle validation errors (422)
+            if (error.response && error.response.status === 422) {
+                return {
+                    success: false,
+                    data: null,
+                    error: processValidationErrors(error)
+                };
+            } else {
+                return {
+                    success: false,
+                    data: null,
+                    error: 'Error saving recipe!'
+                };
+            }
+        }
+    }
+
+    return { submitRecipe };
+}
+
 // Helper function to process validation errors
 function processValidationErrors(error) {
     if (error.data && error.data.errors) {
@@ -44,6 +70,7 @@ function processValidationErrors(error) {
 }
 
 function recipesApp() {
+    const { submitRecipe } = useRecipeSubmit();
     return {
         recipes: [],
         loading: true,
@@ -84,9 +111,14 @@ function recipesApp() {
                     ingredients: this.newRecipe.ingredients
                 }
 
-                try {
-                    const newRecipe = await apiRequest('api/recipes', 'POST', requestBody);
-                    this.recipes.unshift(this.createRecipeComponentFromData(newRecipe));
+                const {success, data, error} = await submitRecipe(
+                    'api/recipes',
+                    'POST',
+                    requestBody
+                );
+
+                if (success) {
+                    this.recipes.unshift(this.createRecipeComponentFromData(data));
                     this.error = null;
 
                     // Clear form after successful submission
@@ -94,14 +126,8 @@ function recipesApp() {
                     this.description = '';
                     this.ingredients = [];
                     this.show = false;
-                } catch (error) {
-                    // Try to parse response to get validation errors
-                    if (error.response && error.response.status === 422) {
-                        this.error = processValidationErrors(error);
-                    } else {
-                        // Retains generic error message for case like 500
-                        this.error = 'Error adding recipe!';
-                    }
+                } else {
+                    this.error = error;
                 }
             },
         },
@@ -113,14 +139,20 @@ function recipesApp() {
             recipe.editingData.ingredients.push({id: null, name: ''});
         },
         async saveExistingRecipe (recipe) {
-            try {
-                const editedRecipe = JSON.parse(JSON.stringify(recipe.editingData));
+            const editedRecipe = JSON.parse(JSON.stringify(recipe.editingData));
 
-                recipe.data = editedRecipe;
+            const { success, data, error } = await submitRecipe(
+                `/api/recipes/${recipe.data.id}`,
+                'PUT',
+                editedRecipe
+            );
+
+            if (success) {
+                recipe.data = data;
                 recipe.editing = false;
                 recipe.error = null;
-            } catch (error) {
-                recipe.error = 'Error saving recipe!';
+            } else {
+                recipe.error = error;
             }
         },
     };
