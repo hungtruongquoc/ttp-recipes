@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRecipeRequest;
+use App\Http\Requests\UpdateRecipeRequest;
 use App\Models\Ingredient;
 use App\Models\Recipe;
 use Illuminate\Http\JsonResponse;
@@ -21,17 +22,14 @@ class RecipeController extends Controller
 
     public function newRecipe(StoreRecipeRequest $request): JsonResponse
     {
-        // Use a transaction to ensure atomicity
         try {
             DB::beginTransaction();
 
-            // Create the recipe with validated data
             $recipe = Recipe::create([
                 'name' => $request->name,
                 'description' => $request->description,
             ]);
 
-            // Add ingredients
             foreach ($request->ingredients as $ingredientName) {
                 $recipe->ingredients()->create([
                     'name' => $ingredientName,
@@ -40,18 +38,74 @@ class RecipeController extends Controller
 
             DB::commit();
 
-            // Load the ingredients relationship before returning
+            // Refreshes the ingredient list
             $recipe->load('ingredients');
 
             return response()->json($recipe, 201);
         } catch (\Exception $e) {
             DB::rollBack();
-
-            // Log the error for debugging
             Log::error('Failed to create recipe: ' . $e->getMessage());
 
             return response()->json([
                 'error' => 'Failed to create recipe'
+            ], 500);
+        }
+    }
+
+    public function updateRecipe(UpdateRecipeRequest $request, int $id): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $recipe = Recipe::findOrFail($id);
+
+            $recipe->update([
+                'name' => $request->name,
+                'description' => $request->description,
+            ]);
+
+            // Collects ids of related ingredients for removing unused ones later
+            $existingIngredientIds = [];
+
+            foreach ($request->ingredients as $ingredientData) {
+                if (isset($ingredientData['id']) && $ingredientData['id'] !== null) {
+                    // Update existing ingredient
+                    $ingredient = Ingredient::where('id', $ingredientData['id'])
+                        ->where('recipe_id', $recipe->id)
+                        ->first();
+
+                    if ($ingredient) {
+                        $ingredient->update(['name' => $ingredientData['name']]);
+                        $existingIngredientIds[] = $ingredient->id;
+                    }
+                } else {
+                    $newIngredient = $recipe->ingredients()->create([
+                        'name' => $ingredientData['name']
+                    ]);
+
+                    $existingIngredientIds[] = $newIngredient->id;
+                }
+            }
+
+            // Deletes any ingredients not in the update request
+            $recipe->ingredients()
+                ->whereNotIn('id', $existingIngredientIds)
+                ->delete();
+
+            DB::commit();
+
+            // Refreshes the ingredient list
+            $recipe->load('ingredients');
+
+            return response()->json($recipe);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Failed to update recipe: ' . $e->getMessage());
+            Log::error('Error details: ' . $e->getTraceAsString());
+
+            return response()->json([
+                'error' => 'Failed to update recipe'
             ], 500);
         }
     }
