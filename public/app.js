@@ -134,6 +134,7 @@ function recipesApp() {
                 editingData: {},
                 editing: false,
                 error: null,
+                submitting: false
             };
         },
         async fetchRecipes() {
@@ -239,20 +240,29 @@ function recipesApp() {
                 return; // Stop if validation fails
             }
 
+            recipe.submitting = true;
+
             const editedRecipe = JSON.parse(JSON.stringify(recipe.editingData));
 
-            const {success, data, error} = await submitRecipe(
-                `/api/recipes/${recipe.data.id}`,
-                'PUT',
-                editedRecipe
-            );
+            try {
+                const {success, data, error} = await submitRecipe(
+                    `/api/recipes/${recipe.data.id}`,
+                    'PUT',
+                    editedRecipe
+                );
 
-            if (success) {
-                recipe.data = data;
-                recipe.editing = false;
-                recipe.error = null;
-            } else {
-                recipe.error = error;
+                if (success) {
+                    recipe.data = data;
+                    recipe.editing = false;
+                    recipe.error = null;
+                } else {
+                    recipe.error = error;
+                }
+            } catch (e) {
+                recipe.error = 'Unexpected error during submission';
+            } finally {
+                // Always reset the submitting flag
+                recipe.submitting = false;
             }
         },
     };

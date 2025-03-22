@@ -121,7 +121,12 @@
                                 </div>
                                 <p class="flex">
                                     <button x-on:click="cancelEditing(recipe)">Cancel</button>
-                                    <button class="primary" x-on:click="saveExistingRecipe(recipe)">Save</button>
+                                    <button class="primary"
+                                            x-on:click="saveExistingRecipe(recipe)"
+                                            x-bind:disabled="recipe.submitting">
+                                        <span x-show="!recipe.submitting">Save</span>
+                                        <span x-show="recipe.submitting">Saving...</span>
+                                    </button>
                                 </p>
                                 <div x-show="!!recipe.error" class="error-text" x-cloak>
                                     <pre x-text="recipe.error" style="white-space: pre-wrap; font-family: inherit;"></pre>
