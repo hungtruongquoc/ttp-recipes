@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\CacheDataChanged;
 use App\Http\Exceptions\IngredientNotFoundException;
 use App\Http\Exceptions\RecipeCreationException;
 use App\Http\Exceptions\RecipeNotFoundException;
@@ -15,21 +16,38 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class RecipeController extends Controller
 {
+    /**
+     * Get a list of all recipes with their ingredients.
+     *
+     * @param Request $request The incoming HTTP request
+     * @return JsonResponse A JSON response containing a collection of recipes with ingredients
+     */
     public function getRecipes(Request $request): JsonResponse
     {
-        $recipes = Recipe::select('id', 'name', 'description', 'created_at')
-            ->with('ingredients:id,recipe_id,name')
-            ->latest()
-            ->get();
+        // Generate a cache key
+        $cacheKey = 'recipes.all';
+
+        // Cache the results for 60 minutes (or any duration that makes sense for your app)
+        $recipes = Cache::remember($cacheKey, now()->addMinutes(60), function () {
+            return Recipe::select('id', 'name', 'description', 'created_at')
+                ->with('ingredients:id,recipe_id,name')
+                ->latest()
+                ->get();
+        });
 
         return $this->respondWithCollection(RecipeResource::collection($recipes));
     }
 
     /**
-     * @throws RecipeCreationException
+     * Create a new recipe with ingredients.
+     *
+     * @param StoreRecipeRequest $request The validated incoming request with recipe data
+     * @return JsonResponse A JSON response containing the newly created recipe resource
+     * @throws RecipeCreationException If an error occurs during recipe creation
      */
     public function newRecipe(StoreRecipeRequest $request): JsonResponse
     {
@@ -49,6 +67,7 @@ class RecipeController extends Controller
 
             DB::commit();
 
+            event(new CacheDataChanged());
             // Refreshes the ingredient list
             $recipe->load('ingredients');
 
@@ -62,9 +81,14 @@ class RecipeController extends Controller
     }
 
     /**
-     * @throws IngredientNotFoundException
-     * @throws RecipeNotFoundException
-     * @throws RecipeUpdateException
+     * Update an existing recipe and its ingredients.
+     *
+     * @param UpdateRecipeRequest $request The validated incoming request with updated recipe data
+     * @param int $id The ID of the recipe to update
+     * @return JsonResponse A JSON response containing the updated recipe resource
+     * @throws RecipeNotFoundException If the recipe with the given ID is not found
+     * @throws IngredientNotFoundException If a referenced ingredient is not found
+     * @throws RecipeUpdateException If an error occurs during recipe update
      */
     public function updateRecipe(UpdateRecipeRequest $request, int $id): JsonResponse
     {
@@ -108,6 +132,7 @@ class RecipeController extends Controller
 
             DB::commit();
 
+            event(new CacheDataChanged());
             // Refreshes the ingredient list
             $recipe->load('ingredients');
 
