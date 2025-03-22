@@ -1,10 +1,18 @@
-async function apiRequest(path) {
+async function apiRequest(path, method = 'GET', body = null) {
+    const options = {
+        method,
+        headers: {
+            'Accept': 'application/json',
+        }
+    };
+
+    if (body) {
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(body);
+    }
+
     try {
-        const response = await fetch(path, {
-            headers: {
-                'Accept': 'application/json',
-            },
-        });
+        const response = await fetch(path, options);
 
         if (!response.ok) {
             throw new Error(`HTTP error, status ${response.status}`);
