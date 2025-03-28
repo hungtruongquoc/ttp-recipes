@@ -52,4 +52,43 @@ class RecipeControllerTest extends TestCase
                 ]
             ]);
     }
+
+    /**
+     * Test creating a new recipe and dispatching the cache invalidation event.
+     */
+    public function test_new_recipe_creates_recipe_and_dispatches_event()
+    {
+        // Fake event dispatching
+        Event::fake();
+
+        $payload = [
+            'name' => 'New Recipe',
+            'description' => 'A brand new recipe',
+            'ingredients' => ['Flour', 'Water']
+        ];
+
+        $response = $this->postJson('/api/recipes', $payload);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure(
+                [
+                    'id',
+                    'name',
+                    'description',
+                    'ingredients',
+                    'created_at'
+                ]);
+
+        // Assert that the recipe exists in the database
+        $this->assertDatabaseHas('recipes', [
+            'name' => 'New Recipe',
+            'description' => 'A brand new recipe'
+        ]);
+
+        // Assert that ingredients were created (should be 2)
+        $this->assertDatabaseCount('ingredients', 2);
+
+        // Assert that the cache invalidation event was dispatched
+        Event::assertDispatched(CacheDataChanged::class);
+    }
 }
